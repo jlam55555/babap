@@ -1,0 +1,27 @@
+@import url("https://fonts.googleapis.com/css?family=Alegreya+Sans+SC:800|Alegreya+Sans:300,400,400i,700");
+html, body {
+  background-color: #20304C;
+  color: #8F98A6;
+  font-family: "alegreya sans", sans-serif;
+  font-size: 16px;
+  margin: 0;
+  padding: 0; }
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0; }
+
+#indexCenter {
+  text-align: center;
+  height: 7em;
+  position: absolute;
+  top: calc(50% - 3.5em);
+  left: 0;
+  width: 100%; }
+
+#indexTitle {
+  font-family: 'alegreya sans sc';
+  font-weight: 800;
+  font-size: 4em; }
+
+#indexDescription {
+  font-size: 2em; }
