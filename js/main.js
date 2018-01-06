@@ -12,52 +12,23 @@ window.onload = () => {
 
   // basic variables
   var person = {
-    x: width/2,
-    y: height/2
-  };
-
-  var mouse = {
     x: 0,
     y: 0
   };
-  var heading = 0;
-  var armPosition = 0;
-  var armForward = true;
-  var walking = false;
-  var personMoves = false;
+  var map = [];
 
   // visual customizations
-  var updateInterval = 10;
-  var headSize = 20;
-  var armWidth = 10;
-  var armLength = 8;
-  var armSpeed = 1;
-  var personSpeed = 2;
   var fontSize = 30;
   var defaultFont = fontSize + "px Open Sans";
+  var personMoves = false;
+  var headSize = 20;
+  var armWidth = 10;
 
   // colors
   var headColor = "#F5F5DC";
   var armColor = "#00CED1";
   var fontColor = "white";
   var confirmColor = "rgba(0, 255, 0, 0.1)";
-
-  // example map
-  var map = [
-    {
-      type: "text",
-      x: 250,
-      y: 250,
-      content: "Hello, World!"
-    },
-    {
-      type: "house",
-      x: 500,
-      y: 500,
-      title: "This is a house",
-      content: "Inside the house"
-    }
-  ];
 
   // house for drawing
   var drawHouse = function(x, y, title) {
@@ -90,21 +61,7 @@ window.onload = () => {
     ctx.fillText(title, x-ctx.measureText(title).width/2, y-75-fontSize);
   };
 
-  // draw function
-  var draw = function() {
-    ctx.clearRect(0, 0, width, height);
-
-    // if person moves, update person position on move
-    // else update object positions and keep person in center
-    if(!personMoves) {
-      var personTmp = person;
-      person = {
-        x: width/2,
-        y: height/2,
-        heading: person.heading
-      };
-    }
-    
+  var drawPerson = function(person) {
     // rotate canvas to draw person
     ctx.save();
     ctx.translate(person.x, person.y);
@@ -114,14 +71,14 @@ window.onload = () => {
     // draw arms
     ctx.fillStyle = armColor;
     ctx.fillRect(
-      Math.min(person.x - armWidth/2 + armPosition, person.x - armWidth/2),
+      Math.min(person.x - armWidth/2 + person.armPosition, person.x - armWidth/2),
       person.y - headSize/2 - armWidth,
-      Math.abs(armPosition) + armWidth,
+      Math.abs(person.armPosition) + armWidth,
       armWidth);
      ctx.fillRect(
-      Math.min(person.x - armWidth/2 - armPosition, person.x - armWidth/2),
+      Math.min(person.x - armWidth/2 - person.armPosition, person.x - armWidth/2),
       person.y + headSize/2,
-      Math.abs(armPosition) + armWidth,
+      Math.abs(person.armPosition) + armWidth,
       armWidth);
       
     // draw head
@@ -134,9 +91,24 @@ window.onload = () => {
       
     // unrotate canvas to draw person
     ctx.restore();
+  };
+
+  // draw function
+  var draw = function() {
+    ctx.clearRect(0, 0, width, height);
+
+    // if person moves, update person position on move
+    // else update object positions and keep person in center
+    /*if(!personMoves) {
+      var personTmp = JSON.parse(JSON.stringify(person));
+      person.x = width/2;
+      person.y = height/2;
+    }
+    
+    
     if(!personMoves) {
       person = personTmp;
-    }
+    }*/
     
     // draw map stuff
     for(var object of map) {
@@ -162,6 +134,12 @@ window.onload = () => {
         // draw house
         drawHouse(x, y, object.title);
       }
+
+      // person
+      if(object.type === "person") {
+        // draw person
+        drawPerson(object);
+      }
       
     }
     
@@ -169,45 +147,30 @@ window.onload = () => {
   }
   draw();
 
-  // update person
-  setInterval(() => {
+  // get person updates
+  socket.on("personUpdate", newPerson => {
+    person = newPerson;
+  });
+  socket.on("mapUpdate", newMap => {
+    map = newMap;
+  });
 
-    // walk update arm position
-    if(armForward) {
-      if(armPosition < armLength && (walking || !walking && armPosition != 0)) {
-        armPosition += armSpeed;
-      } else {
-        armForward = false;
-      }
-    } else {
-      if(armPosition > -armLength && (walking || !walking && armPosition != 0)) {
-        armPosition -= armSpeed;
-      } else {
-        armForward = true;
-      }
-    }
-    
-    // update player heading
-    person.heading = 
-      personMoves ? (mouse.x < person.x ? Math.PI : 0) + Math.atan((mouse.y - person.y) / (mouse.x - person.x))
-      : (mouse.x < width/2 ? Math.PI : 0) + Math.atan((mouse.y - height/2) / (mouse.x - width/2));
-    
-    // move person if walking
-    if(walking) {
-      person.x += personSpeed * Math.cos(person.heading);
-      person.y += personSpeed * Math.sin(person.heading);
-    }
-    
-  }, updateInterval);
-
-  // get mouse position
-  document.addEventListener("mousemove", (event) => {
-    mouse = {
+  // update person heading 
+  document.addEventListener("mousemove", event => {
+    var mouse = {
       x: event.pageX,
       y: event.pageY
     };
+    person.heading = 
+      personMoves ? (mouse.x < person.x ? Math.PI : 0) + Math.atan((mouse.y - person.y) / (mouse.x - person.x))
+      : (mouse.x < width/2 ? Math.PI : 0) + Math.atan((mouse.y - height/2) / (mouse.x - width/2));
+    socket.emit("headingUpdate", person.heading);
   });
-  var mouseHandler = event => walking = event.type === "mousedown";
+
+  // update person walking
+  var mouseHandler = event => {
+    socket.emit("walkingUpdate", event.type === "mousedown");
+  }
   document.addEventListener("mousedown", mouseHandler);
   document.addEventListener("mouseup", mouseHandler);
 
