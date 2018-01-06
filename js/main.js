@@ -147,22 +147,34 @@ window.onload = () => {
   });
 
   // update person heading 
+  var updateHeading = function(mouse) {
+    person.heading = 
+      personMoves ? (mouse.x < person.x ? Math.PI : 0) + Math.atan((mouse.y - person.y) / (mouse.x - person.x))
+      : (mouse.x < width/2 ? Math.PI : 0) + Math.atan((mouse.y - height/2) / (mouse.x - width/2));
+    socket.emit("headingUpdate", person.heading);
+  };
+  document.addEventListener("touchmove", event => {
+    var touch = {
+      x: event.touches[0].clientX,
+      y: event.touches[0].clientY
+    };
+    updateHeading(touch);
+  });
   document.addEventListener("mousemove", event => {
     var mouse = {
       x: event.pageX,
       y: event.pageY
     };
-    person.heading = 
-      personMoves ? (mouse.x < person.x ? Math.PI : 0) + Math.atan((mouse.y - person.y) / (mouse.x - person.x))
-      : (mouse.x < width/2 ? Math.PI : 0) + Math.atan((mouse.y - height/2) / (mouse.x - width/2));
-    socket.emit("headingUpdate", person.heading);
+    updateHeading(mouse);
   });
 
   // update person walking
   var mouseHandler = event => {
-    socket.emit("walkingUpdate", event.type === "mousedown");
+    socket.emit("walkingUpdate", event.type === "mousedown" || event.type === "touchstart");
   }
   document.addEventListener("mousedown", mouseHandler);
+  document.addEventListener("touchstart", mouseHandler);
   document.addEventListener("mouseup", mouseHandler);
+  document.addEventListener("touchend", mouseHandler);
 
 };

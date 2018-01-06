@@ -2,6 +2,9 @@ body, html, canvas {
   background-color: #20304C;
   margin: 0;
   padding: 0;
-  display: border-box; }
+  display: border-box;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; }
 
 /*# sourceMappingURL=main.css.map */
