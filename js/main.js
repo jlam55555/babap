@@ -61,6 +61,7 @@ window.onload = () => {
     ctx.fillText(title, x-ctx.measureText(title).width/2, y-75-fontSize);
   };
 
+  // person for drawing
   var drawPerson = function(person) {
     // rotate canvas to draw person
     ctx.save();
@@ -83,7 +84,6 @@ window.onload = () => {
       
     // draw head
     ctx.fillStyle = headColor;
-    //ctx.fillRect(person.x - headSize/2, person.y - headSize/2, headSize, headSize);
     ctx.beginPath();
     ctx.arc(person.x, person.y, headSize*1.25/2, 0, Math.PI*2)
     ctx.closePath();
@@ -97,24 +97,21 @@ window.onload = () => {
   var draw = function() {
     ctx.clearRect(0, 0, width, height);
 
-    // if person moves, update person position on move
-    // else update object positions and keep person in center
-    /*if(!personMoves) {
-      var personTmp = JSON.parse(JSON.stringify(person));
-      person.x = width/2;
-      person.y = height/2;
-    }
-    
-    
-    if(!personMoves) {
-      person = personTmp;
-    }*/
-    
     // draw map stuff
     for(var object of map) {
       var x = personMoves ? object.x : object.x - person.x + width/2;
       var y = personMoves ? object.y : object.y - person.y + height/2;
       
+      // person
+      if(object.type === "person") {
+
+        // draw person
+        var objectCopy = Object.assign({}, object);
+        objectCopy.x = x;
+        objectCopy.y = y;
+        drawPerson(objectCopy);
+      }
+
       // text
       if(object.type === "text") {
         ctx.fillStyle = fontColor;
@@ -133,12 +130,6 @@ window.onload = () => {
         
         // draw house
         drawHouse(x, y, object.title);
-      }
-
-      // person
-      if(object.type === "person") {
-        // draw person
-        drawPerson(object);
       }
       
     }
